@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+   <meta name="keywords" content="NoSQL" /> 
+   
+  <title>Little Grass</title>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+
+  <!-- **** Layout Stylesheet **** -->
+  <link rel="stylesheet" type="text/css" href="type.css" charset="utf-8"/>
+  <link rel="shortcut icon" href="img/grass.jpg" />
+</head>
+
+<body>
+<div id="container">
+<!-- HEADER and MENU //-->
+<div id="header">
+  <img src="/img/nosql.jpg" class="fltright" height=100 alt="network"/>
+  <h1>NoSQL</h1>
+  <p>Memcached Application</p> 
+</div>
+
+<div id="menu">	
+  <a href="share.html">Back</a>
+</div> 	
+
+<div id="contentwide">
+
+<h4>What is Memcached?</h4>
+Memcached is an open source and high-performance cache system with distributed memory objects.<br>
+1. Work as database front end memory cache. 
+By allocating the specified memory space to access data, the database can reduce the high concurrent access, so as to improve the performance of database access.
+<br>2. The storage of sesson data sharing between cluster application servers.
+<br>
+<h4>Features of Memcached:</h4>
+1. Data that needs to be cached is stored in the memory in the form of key/value pairs, and each cached data has a unique key.<br>
+2. Once Memcached restart the data on it all lost. Reboot easily leads to a database avalanche.<br>
+3. When the cache is full, the LRU algorithm is used to delete the least used key/value pair. <br>
+4. When you get key, you can see the record timestamp. <br>
+<h4>Memcached Applications:</h4>
+1. Assign different servers according to the machine's UUID.<br>
+2. URL_HASH，An element is fixed to a server.<br>
+3. The middleware agent is responsible for requesting back-end cache services.<br>
+4. Load balancing of cache using LVS and haproxy.
+<br>
+<h4>The Principle:</h4>
+1. Using 'Slab Allocation' mechanism to allocate and manage memory.<br>
+2. Similar to disk management, reducing waste space and giving the file the appropriate storage space.<br>
+<h4>The Problems when Combining Memcached with MySQL:</h4>
+MySQL can save tons of data. Memcached only saves the hot data into memory.<br>
+1. MySQL needs to dismantle the schemas and the tables. Memcached also needs to keep expanding.<br>
+2. The consistency between Memcached and MySQL database. <br>
+3. Data hit rate low or Memcached crash.<br>
+4. Data consistency across different LANs.<br>
+
+<br><form>
+  <fieldset>
+    <legend>Install Memcached</legend>
+	#first install libevent(yum install works too)<br>
+wget http://www.monkey.org/~provos/libevent-1.4.13-stable.tar.gz<br>
+tar zxf libevent-1.4.13-stable.tar.gz<br>
+cd libevent-1.4.13-stable.tar.gz<br>
+./confiure<br>
+make <br>
+make install<br><br>
+
+#Install Memcache<br>
+wget http://memcached.org/files/memcached-1.4.21.tar.gz <br>
+tar -zxvf memcached-1.4.21.tar.gz<br>    
+cd memcached-1.4.21  <br>
+./configure --prefix=/usr/local/memcached --with-libevent=/usr/local/libevent/  <br>  
+make    <br>
+make install    <br><br>
+
+#Configure<br>
+echo "/usr/local/lib" >> /etc/ld.so.conf<br>
+ldconfig<br><br>
+
+#Find help<br>
+/usr/local/bin/memcached -h <br><br>
+
+#Start Memcached<br>
+memcached -p 11211 -u root -m 16m -c 10240 -d -P /var/run/11211.pid<br>
+memcached -p 11212 -u root -m 16m -c 10240 -d（For multiple instances，only change -p）<br>
+NOTE: Putting the command in /etc/rc.local can make self-starting when machine is on<br>
+-p: port; -u: user; -m: size(MB); -c: max concurrent connection; -d: Daemon; -P: pid file;<br><br>
+
+#Check status<br>
+lsof -i :11211<br><br>
+
+#shutdown<br>
+pkill memcached(few instances only)  |<br> 
+ps -ef|grep memcached<br>
+kill ###  |<br> 
+kill 'cat /var/run/11211.pid'<br>
+  </fieldset>
+</form>
+<br>Installing Memcached is much easier than installing MySQL. <br>
+I provide two ways to use Memcached.<br>	
+<br><form>
+  <fieldset>
+    <legend>Operations</legend>
+1.<br>
+Write data（yum install nc）<br>
+printf "set key 0 0 10\r\nSunnyboy\r\n"|nc 192.168.1.101 11211<br><br>
+
+Read data<br>
+printf "get key\r\n"|nc 192.168.1.101 11211<br><br>
+
+Delete data<br>
+printf "delete key\r\n"|nc 192.168.1.101 11211<br><br>
+
+Status<br>
+printf "stats\r\n"|nc 192.168.1.101 11211<br><br><br>
+
+2.<br>
+Write by telnet<br>
+telnet 192.168.1.101 11211<br><br>
+
+set key 0 0 10<br>
+content<br><br>
+
+get key<br><br>
+
+delete key<br><br>
+
+stats（record）<br>
+  </fieldset>
+</form>
+<br>In the work condition, we can use PHP to connect Memcached. 
+<br><br><form>
+  <fieldset>
+    <legend>PHP API</legend>
+  $memcache01 = new Memcache;<br>
+  $memcache01->connect('192.168.1.101', 11211) or die ("could not connect");<br>
+  $memcache01->set('key001','sun123');<br>
+  $get_value01 = $memcache01->get('key001');<br>
+  echo $get_value01;<br>
+  </fieldset>
+</form>		
+<br>	
+<a href="#container">
+<img border="0" alt="Back To Top" src="img/rocket.jpg" height="50" class="fltright">
+</a>	
+<div id="footer">
+<p>Copyright 2017 Siyuan Cao</p>
+</div>
+
+</div>
+</body>
+</html>
